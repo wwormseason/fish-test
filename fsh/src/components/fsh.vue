@@ -4,7 +4,7 @@
       ref="fsh"
       id="fsh"
       aria-hidden="true"
-      v-on:click="(puff = true), (puffStart = frameCount), (initPuff = true)"
+      @click="(puff = true), (puffStart = frameCount), (initPuff = true)"
     ></div>
   </div>
 </template>
@@ -13,7 +13,6 @@
   import { onMounted, useTemplateRef } from "vue";
 
   const fsh = useTemplateRef("fsh");
-  let fshFile = "../assets/fsh2.gif";
   let puff = false;
   let initPuff = false;
 
@@ -26,6 +25,7 @@
   let frameCount = 0;
   let idleTime = 0;
   let fshSpeed = 10;
+  let direction = "leftUn";
   let puffStart;
   const spriteSets = {
     rightUn: [
@@ -63,9 +63,6 @@
       return;
     } else {
       const curS = document.currentScript;
-      if (curS && curS.dataset.fsh) {
-        fshFile = curS.dataset.fsh;
-      }
       if (curS && curS.dataset.persistPosition) {
         if (curS.dataset.persistPosition === "") {
           persistPosition = true;
@@ -130,6 +127,8 @@
 
     function idle() {
       idleTime += 1;
+      puffTime();
+      setSprite(direction, frameCount);
       if (idleTime > 10 && Math.floor(Math.random() * 50) === 0) {
         nextPosX = Math.floor(Math.random() * window.innerWidth);
         nextPosY = Math.floor(Math.random() * window.innerHeight);
@@ -145,17 +144,16 @@
         idle();
         return;
       }
-      let direction;
       if (initPuff) {
-        direction = diffX / distance > 0.5 ? "leftPuffIns" : "rightPuffIns";
-        direction = diffX / distance < -0.5 ? "rightPuffIns" : "leftPuffIns";
+        direction = diffX / distance > 0.1 ? "leftPuffIns" : "rightPuffIns";
+        direction = diffX / distance < -0.1 ? "rightPuffIns" : "leftPuffIns";
         initPuff = false;
       } else if (puff) {
-        direction = diffX / distance > 0.5 ? "leftPuff" : "rightPuff";
-        direction = diffX / distance < -0.5 ? "rightPuff" : "leftPuff";
+        direction = diffX / distance > 0.1 ? "leftPuff" : "rightPuff";
+        direction = diffX / distance < -0.1 ? "rightPuff" : "leftPuff";
       } else {
-        direction = diffX / distance > 0.5 ? "leftUn" : "rightUn";
-        direction = diffX / distance < -0.5 ? "rightUn" : "leftUn";
+        direction = diffX / distance > 0.1 ? "leftUn" : "rightUn";
+        direction = diffX / distance < -0.1 ? "rightUn" : "leftUn";
       }
 
       setSprite(direction, frameCount);
@@ -170,8 +168,7 @@
 
     function puffTime() {
       if (puff) {
-        let n = frameCount - puffStart;
-        if (n > 20) {
+        if (frameCount - puffStart > 20) {
           puff = false;
         }
       }
@@ -184,7 +181,6 @@
     width: 64px;
     height: 64px;
     position: fixed;
-    pointer-events: fill;
     image-rendering: pixelated;
     z-index: 33550336;
     background-image: url("../assets/fsh2.gif");
